@@ -1,0 +1,182 @@
+{
+  "name": "job finder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "23fb7b39-96a2-4b30-9462-4c7adc22d123",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.com/remote-jobs.rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "504ceae6-9f47-4d3c-a08f-4f0858530563",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://remoteok.com/remote-jobs.rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2afc7bd3-a113-4c8e-843b-92c4d33f17c6",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();\n\nconst items = $json.items || [];\n\nconst keywords = [\"internship\", \"python\", \"ai\", \"developer\", \"remote\"];\n\nlet results = [];\n\nfor (let job of items) {\n  let text = (job.title + \" \" + job.content).toLowerCase();\n\n  for (let key of keywords) {\n    if (text.includes(key)) {\n      results.push({\n        title: job.title,\n        link: job.link\n      });\n      break;\n    }\n  }\n}\n\nreturn results.map(j => ({ json: j }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "e34307b3-513b-481f-b046-e564c1cdee20",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63370f83-f41d-4325-9d70-665788bd38b5",
+              "name": "message",
+              "value": "=🚨 Job Alert!  Title: {{$json.title}} \nApply here: {{$json.link}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "e4debf83-87b2-4876-b409-f3d5b5ce677c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "swargamsaiakshaya@gmail.com",
+        "subject": "🚨 New Job Alert Found",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "c6d3446f-dc18-43d1-a42a-3166227b1e27",
+      "name": "Send a message",
+      "webhookId": "d17b980e-84cc-40a8-be15-b935c02a8aa8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EaumqPFIWBTZt0Zu",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5101dfbf-f4ca-4def-a4c3-cca5f9e4e549",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "872b78df75662263c7646a368ad3949b4ea078b92acf01caeb351d90cc10a230"
+  },
+  "id": "w5jD3SPvt3wXT9Zx",
+  "tags": []
+}
